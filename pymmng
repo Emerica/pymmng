@@ -3,42 +3,39 @@
 
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
+import subprocess
+
 class MainWindow(QWidget): 
     def __init__(self): 
+        demods  = subprocess.check_output("multimon-ng -h 2>&1|grep demodulators:|cut -d: -f2", shell=True)
+        if(demods == ""):
+            print "Unable to run multimon-ng, please make sure it's installed"
+            exit(-1)
         
-        modes = ["POCSAG512","POCSAG1200","POCSAG2400","EAS","UFSK1200","CLIPFSK","AFSK1200","AFSK2400","AFSK2400_2","AFSK2400_3","HAPN4800","FSK9600","DTMF","ZVEI1","ZVEI2","ZVEI3","DZVEI","PZVEI","EEA","EIA","CCIR","MORSE","CW"]
+        modes = demods.strip().split(" ")
+        #["POCSAG512","POCSAG1200","POCSAG2400","EAS","UFSK1200","CLIPFSK","AFSK1200","AFSK2400","AFSK2400_2","AFSK2400_3","HAPN4800","FSK9600","DTMF","ZVEI1","ZVEI2","ZVEI3","DZVEI","PZVEI","EEA","EIA","CCIR","MORSE","CW"]
         QWidget.__init__(self) 
         #self.setGeometry(250, 150, 400, 300) 
         self.setWindowTitle("MultiMon-ng Gui")         
-        
         tab_widget = QTabWidget() 
-        tab1 = QWidget() 
-        tab2 = QWidget() 
-         
-        tab_widget.addTab(tab1, "Morse") 
-        tab_widget.addTab(tab2, "DTMF")
-        
-
-        morse = QPlainTextEdit()
-        morse_box = QVBoxLayout()
-        morse_box.addWidget(morse)
-        tab1.setLayout(morse_box);
-
-
-        dtmf = QPlainTextEdit()
-        dtmf_box = QVBoxLayout()
-        dtmf_box.addWidget(dtmf)
-        tab2.setLayout(dtmf_box);
-
         model = QStandardItemModel()
-
-        for n in modes:                   
-            item = QStandardItem('%s' % n)
-            check = Qt.Checked
-            item.setCheckState(check)
-            item.setCheckable(True)
-            model.appendRow(item)
-
+        tabs = []
+        edits = []
+        vboxen = []
+        for n in modes:
+            if(n!="SCOPE"):            
+                item = QStandardItem('%s' % n)
+                check = Qt.Checked
+                item.setCheckState(check)
+                item.setCheckable(True)
+                model.appendRow(item)
+                tabs.append( QWidget() )
+                sz = len(tabs)-1;
+                tab_widget.addTab(tabs[sz],n) 
+                edits.append(QPlainTextEdit())
+                vboxen.append(QVBoxLayout())
+                vboxen[sz].addWidget(edits[sz])
+                tabs[sz].setLayout(vboxen[sz])
 
         view = QListView()
         view.setMaximumWidth(150)
